@@ -1,0 +1,127 @@
+<?php
+// Kết nối cơ sở dữ liệu MySQL
+$servername = "localhost";
+$username = "root"; // Thay đổi nếu cần
+$password = ""; // Thay đổi nếu cần
+$dbname = "user_login_db";
+
+// Tạo kết nối
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Kiểm tra kết nối
+if ($conn->connect_error) {
+    die("Kết nối thất bại: " . $conn->connect_error);
+}
+
+// Xử lý form đăng nhập
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $user = $_POST['username'];
+    $pass = $_POST['password'];
+
+    // Kiểm tra thông tin đăng nhập
+    $sql = "SELECT * FROM users WHERE username = '$user'";
+    $result = $conn->query($sql);
+
+    // Nếu tìm thấy người dùng
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+
+        // Kiểm tra mật khẩu đã mã hóa
+        if (password_verify($pass, $row['password'])) {
+            // Lấy địa chỉ IP của người dùng
+            $ip_address = $_SERVER['REMOTE_ADDR'];
+
+            // Cập nhật IP vào cơ sở dữ liệu
+            $update_sql = "UPDATE users SET ip_address = '$ip_address' WHERE username = '$user'";
+            if ($conn->query($update_sql) === TRUE) {
+                echo "<p>Đăng nhập thành công. Địa chỉ IP của bạn đã được lưu.</p>";
+            } else {
+                echo "<p>Lỗi khi cập nhật IP: " . $conn->error . "</p>";
+            }
+        } else {
+            echo "<p>Mật khẩu không đúng!</p>";
+        }
+    } else {
+        echo "<p>Tên người dùng không tồn tại!</p>";
+    }
+}
+
+$conn->close();
+?>
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Nhập</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; /* Đảm bảo phần footer luôn ở dưới cùng */
+        }
+
+        .login-container {
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            margin: 50px auto;
+        }
+        .login-container h2 {
+            text-align: center;
+        }
+        .login-container input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .login-container button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .login-container button:hover {
+            background-color: #45a049;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 16px;
+            color: #777;
+            padding: 10px;
+            position: absolute;
+            bottom: 10px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-container">
+    <h2>Đăng Nhập</h2>
+    <form action="index.php" method="POST">
+        <input type="text" name="username" placeholder="Tên người dùng" required><br>
+        <input type="password" name="password" placeholder="Mật khẩu" required><br>
+        <button type="submit">Đăng Nhập</button>
+    </form>
+</div>
+
+<!-- Footer "Py Plocc" -->
+<div class="footer">
+    <p>Py Plocc</p>
+</div>
+
+</body>
+</html>
